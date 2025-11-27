@@ -51,6 +51,8 @@ class RoadDataset(Dataset):
         # Etape G : Return
         return image_tensor, mask_tensor
 
+
+
 # ==========================================
 # ZONE DE TEST (Pour vérifier si ton code marche)
 # ==========================================

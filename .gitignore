@@ -4,3 +4,4 @@ __pycache__/
 *.png
 patches/
 dataset/
+Test_GPU.py
