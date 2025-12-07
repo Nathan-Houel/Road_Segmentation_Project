@@ -4,6 +4,8 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 from model import UNET
 from my_dataset import RoadDataset
+from tqdm import tqdm
+import matplotlib.pyplot as plt
 
 
 # --- HYPERPARAMÈTRES ---
@@ -34,4 +36,47 @@ if __name__ == "__main__":
     # L'Optimiseur
     optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
 
+    loss_history = []
+
     # Boucle d'entraînement
+    print("Début de l'entraînement ! 🚀")
+    for epoch in range(NUM_EPOCHS):
+        loop = tqdm(train_loader)
+
+        for batch_idx, (img, mask) in enumerate(loop):
+            # Force la lecture sur le GPU
+            img = img.to(DEVICE)
+            mask = mask.to(DEVICE)
+
+            # Calcul de la prédiction produite par le modèle
+            predictions = model(img)
+
+            # Calcul de l'erreur
+            loss = loss_fn(predictions, mask)
+            
+            # Mise à zéro des gradients
+            optimizer.zero_grad()
+            
+            # Rétropropagation
+            loss.backward()
+
+            # Mise à jour des poids
+            optimizer.step()
+
+        # Affichage Loss
+        print(f"Époque {epoch+1}/{NUM_EPOCHS} : Loss = {loss.item():.4f}")
+        loss_history.append(loss.item())
+
+    # Sauvegarde des poids
+    torch.save(model.state_dict(), "mon_UNET.pth")
+
+    # Création du graphique
+    plt.figure(figsize=(10, 5))
+    plt.plot(loss_history, label='Training Loss')
+    plt.title('Progression de l\'entraînement')
+    plt.xlabel('Époques')
+    plt.ylabel('Loss')
+    plt.legend()
+    plt.show()
+    plt.savefig("courbe_loss.png") # On sauvegarde l'image
+    print("Graphique sauvegardé sous 'courbe_loss.png' 📈")
