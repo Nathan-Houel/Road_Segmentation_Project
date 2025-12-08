@@ -26,7 +26,7 @@ Transform = transforms.Compose([
 ])
 
 # Chargement de l'image Test
-img = Image.open('Test_image.jpg')
+img = Image.open("Test_image.jpg")
 
 # Appliquer la transformation à notre image test
 img_tensor = Transform(img)
@@ -42,7 +42,7 @@ print("Probabilité Max détectée :", probs.max().item())
 print("Probabilité Moyenne :", probs.mean().item())
 
 # Classification
-preds = (probs > 0.3).float()
+preds = (probs > 0.5).float()
 
 # Préparation pour l'affichage
 pred_mask = preds.cpu().squeeze().numpy()
@@ -55,6 +55,6 @@ mask_visual = np.ma.masked_where(pred_mask == 0, pred_mask)
 plt.figure(figsize=(8, 8))
 plt.title("Superposition : Image + Prédiction (Rose)")
 plt.imshow(img_resized)
-plt.imshow(mask_visual, cmap='spring', alpha=0.6)
+plt.imshow(mask_visual, cmap='Reds_r', alpha=0.6)
 plt.axis('off') 
 plt.show()
