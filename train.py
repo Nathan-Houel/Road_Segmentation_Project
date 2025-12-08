@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 LEARNING_RATE = 1e-4  # Vitesse à laquelle le modèle modifie ses poids (trop grand = instable, trop petit = lent)       
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 BATCH_SIZE = 4  # Nombre d'images traitées en même temps (si ta mémoire sature, baisse à 2 ou 1)              
-NUM_EPOCHS = 10  # Nombre de fois que le modèle va voir l'ensemble du dataset           
+NUM_EPOCHS = 20  # Nombre de fois que le modèle va voir l'ensemble du dataset           
 NUM_WORKERS = 2  # Nombre de processeurs utilisés pour charger les données           
 IMAGE_HEIGHT = 256
 IMAGE_WIDTH = 256
