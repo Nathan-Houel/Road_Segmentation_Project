@@ -37,7 +37,9 @@ class RoadDataset(Dataset):
         # Etape D : Normalisation (0 à 1) + Float32
         image = image.astype("float32") / 255.0
         mask = mask.astype("float32") / 255.0
-        
+        mask[mask < 0.5] = 0.0
+        mask[mask >= 0.5] = 1.0
+
         # Etape E : Numpy -> Tensor
         image_tensor = torch.from_numpy(image)
         mask_tensor = torch.from_numpy(mask)
