@@ -8,10 +8,11 @@ class RoadDataset(Dataset):
     """
     Notre classe personnalisée pour charger les paires Images/Masques.
     """
-    def __init__(self, images_dir, masks_dir):
+    def __init__(self, images_dir, masks_dir, transform=None):
         # 1. Stocke les chemins 'images_dir' et 'masks_dir' dans l'objet (self. ...)
         self.images_dir = images_dir
         self.masks_dir = masks_dir
+        self.transform = transform
 
         # 2. Crée une liste contenant les noms de fichiers des images (utilise os.listdir)
         self.images_names = os.listdir(images_dir)
@@ -34,6 +35,13 @@ class RoadDataset(Dataset):
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         mask = cv2.imread(path_mask, cv2.IMREAD_GRAYSCALE)    
         
+        # Etape C.bis : Transformation sur image et masque
+        if self.transform != None :
+            augmented = self.transform(image=image, mask=mask)
+
+            image = augmented["image"]
+            mask = augmented["mask"]
+
         # Etape D : Normalisation (0 à 1) + Float32
         image = image.astype("float32") / 255.0
         mask = mask.astype("float32") / 255.0
