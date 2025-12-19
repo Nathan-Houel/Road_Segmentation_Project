@@ -6,13 +6,14 @@ from model import UNET
 from my_dataset import RoadDataset
 from tqdm import tqdm
 import matplotlib.pyplot as plt
+import albumentations as A
 
 
 # --- HYPERPARAMÈTRES ---
-LEARNING_RATE = 1e-4  # Vitesse à laquelle le modèle modifie ses poids (trop grand = instable, trop petit = lent)       
+LEARNING_RATE = 1e-3  # Vitesse à laquelle le modèle modifie ses poids (trop grand = instable, trop petit = lent)       
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 BATCH_SIZE = 4  # Nombre d'images traitées en même temps (si ta mémoire sature, baisse à 2 ou 1)              
-NUM_EPOCHS = 20  # Nombre de fois que le modèle va voir l'ensemble du dataset           
+NUM_EPOCHS = 30  # Nombre de fois que le modèle va voir l'ensemble du dataset           
 NUM_WORKERS = 2  # Nombre de processeurs utilisés pour charger les données           
 IMAGE_HEIGHT = 256
 IMAGE_WIDTH = 256
@@ -20,9 +21,27 @@ TRAIN_IMG_DIR = "dataset/images"
 TRAIN_MASK_DIR = "dataset/masks"
 
 
+# Classe pour notre loss personnelle
+class DiceBCELoss(nn.Module):
+    def __init__(self, weight=None, size_average=True):
+        super(DiceBCELoss, self).__init__()
+
+    def forward(self, inputs, targets, smooth=1):
+        inputs = torch.sigmoid(inputs)       
+        inputs = inputs.view(-1)
+        targets = targets.view(-1)
+        intersection = (inputs * targets).sum()                            
+        dice_loss = 1 - (2.*intersection + smooth)/(inputs.sum() + targets.sum() + smooth)  
+        BCE = nn.functional.binary_cross_entropy(inputs, targets, reduction='mean')
+        return BCE + dice_loss
+    
+
 if __name__ == "__main__":
+    # Instancie les transformations (Rotation max de 35°, retourne image gauche/droite/haut/bas)
+    train_transform = A.Compose([A.Rotate(limit=35, p=0.5), A.HorizontalFlip(p=0.5), A.VerticalFlip(p=0.1)])
+
     # Instancie le Dataset
-    Dataset = RoadDataset(TRAIN_IMG_DIR, TRAIN_MASK_DIR)
+    Dataset = RoadDataset(TRAIN_IMG_DIR, TRAIN_MASK_DIR, transform=train_transform)
 
     # Créer le DataLoader
     train_loader = DataLoader(Dataset, batch_size=BATCH_SIZE, num_workers=NUM_WORKERS, shuffle=True)
@@ -31,7 +50,7 @@ if __name__ == "__main__":
     model = UNET(in_channels=3, out_channels=1).to(DEVICE)
 
     # La Loss (Sigmoid + Binary Cross Entropy)
-    loss_fn = nn.BCEWithLogitsLoss()
+    loss_fn = DiceBCELoss()
 
     # L'Optimiseur
     optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
@@ -77,6 +96,6 @@ if __name__ == "__main__":
     plt.xlabel('Époques')
     plt.ylabel('Loss')
     plt.legend()
-    plt.show()
     plt.savefig("courbe_loss.png") # On sauvegarde l'image
     print("Graphique sauvegardé sous 'courbe_loss.png' 📈")
+    plt.show()
